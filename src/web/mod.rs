@@ -2,12 +2,17 @@ mod errors;
 pub mod extractors;
 pub mod middlewares;
 mod routes;
+pub mod dto;
+pub mod models;
+mod util;
 
 use std::{env, time::Duration};
 
 use axum::{extract::FromRef, routing::post, Router};
 use log::info;
 use sqlx::postgres::{PgPoolOptions, Postgres};
+
+use crate::web::routes::auth::auth_routes;
 
 #[derive(Clone, FromRef)]
 pub struct AppState {
@@ -31,7 +36,8 @@ pub async fn build_app() -> Router {
     let state = AppState::new().await.unwrap();
     info!("state ok");
     let app = Router::new()
-        .route("/", post(routes::main::root::handler))
-        .with_state(state);
+        .with_state(state.clone())
+        .route("/", post(routes::main::root::index))
+        .merge(auth_routes(&state));
     app
 }
