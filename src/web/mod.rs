@@ -8,7 +8,7 @@ mod util;
 
 use std::{env, time::Duration};
 
-use axum::{extract::FromRef, routing::post, Router};
+use axum::{extract::FromRef, routing::{get, post}, Router};
 use log::info;
 use sqlx::postgres::{PgPoolOptions, Postgres};
 
@@ -37,7 +37,7 @@ pub async fn build_app() -> Router {
     info!("state ok");
     let app = Router::new()
         .with_state(state.clone())
-        .route("/", post(routes::main::root::index))
+        .route("/", get(routes::main::root::index))
         .merge(auth_routes(&state));
     app
 }

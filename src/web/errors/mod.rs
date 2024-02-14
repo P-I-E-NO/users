@@ -94,6 +94,12 @@ impl From<JoinError> for HttpError {
 }
 impl From<jsonwebtoken::errors::Error> for HttpError {
     fn from(e: jsonwebtoken::errors::Error) -> Self {
-        Self::Simple(StatusCode::INTERNAL_SERVER_ERROR, format!("{:?}", e.kind())) // ErrorKind implements Display!
+        Self::Simple(StatusCode::INTERNAL_SERVER_ERROR, "bad_jwt".to_string()) // ErrorKind implements Display!
+    }
+}
+
+impl From<argon2::password_hash::Error> for HttpError {
+    fn from(e: argon2::password_hash::Error) -> Self {
+        Self::Simple(StatusCode::INTERNAL_SERVER_ERROR, "internal_server_error".to_string()) // ErrorKind implements Display!
     }
 }

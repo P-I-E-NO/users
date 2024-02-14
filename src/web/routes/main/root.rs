@@ -8,7 +8,7 @@ pub async fn index() -> Result<Json<Value>, HttpError> {
     Ok(Json(
         json!({
             "success": true,
-            "message": "user microservice"
+            "message": "users microservice"
         })
     ))
 

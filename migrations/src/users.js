@@ -25,7 +25,7 @@ const { Client } = require("pg");
                         id varchar(32) primary key,
                         name varchar(255) not null,
                         surname varchar(255) not null,
-                        email varchar(255) not null,
+                        email varchar(255) unique not null,
                         password varchar(255) not null
                     );
                 `);

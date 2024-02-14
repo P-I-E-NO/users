@@ -1,10 +1,7 @@
 use serde::{Deserialize, Serialize};
-
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct UserClaims {
-    aud: String,
-    sub: String,
-    company: String,
-    exp: u64,
-    user_id: String
+    pub user_id: String,
+    pub name: String,
+    pub surname: String,   
 }
