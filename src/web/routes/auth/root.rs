@@ -37,7 +37,8 @@ pub async fn login(
             Claim::from(UserClaims {
                 user_id: user.id,
                 name: user.name,
-                surname: user.surname
+                surname: user.surname,
+                propic_url: user.propic_url
             })
         ).await?;
 
@@ -77,7 +78,8 @@ pub async fn register(
         Claim::from(UserClaims { 
             user_id: user_id,
             name: body.name,
-            surname: body.surname
+            surname: body.surname,
+            propic_url: None
         })
     ).await?;
 

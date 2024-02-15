@@ -21,8 +21,6 @@ services:
     #volumes:
     #  - users_db_data:/var/lib/postgresql/data
     #  - users_pgdata:/var/lib/postgresql/data/pgdata
-    ports:
-      - "5432:5432"
   app:
     container_name: dockerissimo-rust
     build:
