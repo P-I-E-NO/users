@@ -7,6 +7,7 @@ pub struct User {
     pub surname: String,
     pub id: String,
     pub password: String,
+    pub propic_url: Option<String>
 }
 
 impl User {
@@ -29,7 +30,8 @@ impl User {
                     name: user.get("name"),
                     surname: user.get("surname"),
                     email: user.get("email"),
-                    password: user.get("password")
+                    password: user.get("password"),
+                    propic_url: user.get("propic_url")
                 })
             )
         }else{
@@ -56,7 +58,8 @@ impl User {
                     name: user.get("name"),
                     surname: user.get("surname"),
                     email: user.get("email"),
-                    password: user.get("password")
+                    password: user.get("password"),
+                    propic_url: user.get("propic_url")
                 })
             )
         }else{
