@@ -26,7 +26,8 @@ const { Client } = require("pg");
                         name varchar(255) not null,
                         surname varchar(255) not null,
                         email varchar(255) unique not null,
-                        password varchar(255) not null
+                        password varchar(255) not null,
+                        propic_url varchar(255) default null
                     );
                 `);
                 await conn.query("commit");

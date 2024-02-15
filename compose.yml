@@ -23,20 +23,21 @@ services:
     #  - users_pgdata:/var/lib/postgresql/data/pgdata
     ports:
       - "5432:5432"
-  #app:
-  #  container_name: dockerissimo-rust
-  #  build:
-  #    context: .
-  #    network: host
-  #  depends_on:
-  #    - postgres_db
-  #  networks:
-  #    - dockerissimo-net
-  #  environment:
-  #    - CONN_URI=postgresql://dockerissimo_rust:pass@postgres_db:5432/fantastic_db
-  #    - RUST_LOG=trace
-  #  ports:
-  #    - "3000:3000"
-  #  volumes:
-  #    - ./src:/code/src
-  #  entrypoint: ["cargo", "watch", "-x", "run"]
+  app:
+    container_name: dockerissimo-rust
+    build:
+      context: .
+      network: host
+    depends_on:
+      - postgres_db
+    networks:
+      - users-net
+    environment:
+      - CONN_URI=postgresql://dockerissimo_rust:pass@postgres_db:5432/fantastic_db
+      - RUST_LOG=trace
+      - JWT_SECRET=Poggaceo
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./src:/code/src
+    entrypoint: ["cargo", "watch", "-x", "run"]

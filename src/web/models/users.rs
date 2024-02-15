@@ -75,7 +75,7 @@ impl User {
     
         let user_id = nanoid!(32);
         sqlx::query("
-            insert into users values 
+            insert into users (id, name, surname, email, password) values 
             (
                 $1, 
                 $2, 
