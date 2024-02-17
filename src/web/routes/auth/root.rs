@@ -1,26 +1,46 @@
-use axum::{debug_handler, extract::State, http::StatusCode, Json};
-use serde_json::{json, Value};
+use axum::{extract::State, http::StatusCode, Json};
 
-use crate::web::{dto::{auth::{login_request::LoginRequest, register_request::RegisterRequest}, user_claims::UserClaims, Claim}, errors::HttpError, extractors::{token::Token, validate_body::ValidatedJson}, models::users::User, util::{hash_password, verify_password}, AppState};
+use crate::web::{dto::{auth::{logged_user_response::LoggedUserResponse, login_request::{LoginRequest, LoginResponse}, register_request::{RegisterRequest, RegisterResponse}}, user_claims::UserClaims, Claim}, errors::HttpError, extractors::{token::Token, validate_body::ValidatedJson}, models::users::User, util::{hash_password, verify_password}, AppState};
 
-#[debug_handler]
+#[utoipa::path(
+    get,
+    path="/auth",
+    responses(
+        (status = 200, description = "Gets logged user", body = LoggedUserResponse),
+    ),
+    security(
+        ("bearerAuth" = [])
+    )
+)]
 pub async fn index(
     Token(user): Token<Claim<UserClaims>>
-) -> Result<Json<Value>, HttpError> {
+) -> Result<Json<LoggedUserResponse>, HttpError> {
 
     Ok(Json(
-        json!({
-            "success": true,
-            "user": user.data()
-        })
+        LoggedUserResponse {
+            success: true,
+            user: user.data().to_owned()
+        }
     ))
 
 }
 
+#[utoipa::path(
+    get,
+    path="/auth/login",
+    responses(
+        (status = 200, description = "Login successful. Outputs a token the user must use to make authenticated requests.", body = LoginResponse),
+        (status = 401, description = "Invalid credentials: either the email and/or the password is invalid."),
+    ),
+    params(
+        ("email" = String, Path, description = "User email"),
+        ("password" = String, Path, description = "User password"),
+    ),
+)]
 pub async fn login(
     State(s): State<AppState>,
     ValidatedJson(body): ValidatedJson<LoginRequest>
-) -> Result<Json<Value>, HttpError> {
+) -> Result<Json<LoginResponse>, HttpError> {
 
     let mut conn = s.pool.acquire().await?;
 
@@ -44,10 +64,10 @@ pub async fn login(
 
         Ok(
             Json(
-                json!({
-                    "success": true,
-                    "token": token
-                })
+                LoginResponse {
+                    success: true,
+                    token: token
+                } 
             )
         )
     }else{
@@ -57,11 +77,24 @@ pub async fn login(
 
 }
 
-
+#[utoipa::path(
+    get,
+    path="/auth/register",
+    responses(
+        (status = 200, description = "Registration successful. Outputs a token the user must use to make authenticated requests.", body = RegisterResponse),
+        (status = 409, description = "The email is already registered."),
+    ),
+    params(
+        ("email" = String, Path, description = "User email"),
+        ("name" = String, Path, description = "User name"),
+        ("surname" = String, Path, description = "User surname"),
+        ("password" = String, Path, description = "User password"),
+    ),
+)]
 pub async fn register(
     State(s): State<AppState>,
     ValidatedJson(body): ValidatedJson<RegisterRequest>
-) -> Result<Json<Value>, HttpError> {
+) -> Result<Json<RegisterResponse>, HttpError> {
 
     let mut tx = s.pool.begin().await?;  
 
@@ -85,9 +118,12 @@ pub async fn register(
 
     tx.commit().await?;
 
-    Ok(Json(json!({
-        "success": true,
-        "token": token
-    })))
+    Ok(Json(
+            RegisterResponse{
+                success: true,
+                token: token
+            }
+        )
+    )
     
 }

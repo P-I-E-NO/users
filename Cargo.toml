@@ -22,3 +22,5 @@ validator = { version = "0.16.1", features = ["derive"] }
 nanoid = "0.4.0"
 argon2 = "0.5.3"
 jsonwebtoken = "9"
+utoipa = "4.2.0"
+utoipa-swagger-ui = { version = "6.0.0", features = ["axum"] }
