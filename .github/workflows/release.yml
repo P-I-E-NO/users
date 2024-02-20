@@ -12,4 +12,4 @@ jobs:
   push-build:
     runs-on: ubuntu-latest
     steps:
-      - run: curl -X POST https://hooks.macca.cloud/mokka/pieno-users?tag=${{ github.ref_name }}
+      - run: curl -X POST https://hooks.macca.cloud/pieno/build/users?tag=${{ github.ref_name }}
