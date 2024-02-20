@@ -4,7 +4,7 @@ use crate::web::{dto::{auth::{logged_user_response::LoggedUserResponse, login_re
 
 #[utoipa::path(
     get,
-    path="/auth",
+    path="/auth/",
     responses(
         (status = 200, description = "Gets logged user", body = LoggedUserResponse),
     ),
@@ -26,7 +26,7 @@ pub async fn index(
 }
 
 #[utoipa::path(
-    get,
+    post,
     path="/auth/login",
     responses(
         (status = 200, description = "Login successful. Outputs a token the user must use to make authenticated requests.", body = LoginResponse),
@@ -78,7 +78,7 @@ pub async fn login(
 }
 
 #[utoipa::path(
-    get,
+    post,
     path="/auth/register",
     responses(
         (status = 200, description = "Registration successful. Outputs a token the user must use to make authenticated requests.", body = RegisterResponse),

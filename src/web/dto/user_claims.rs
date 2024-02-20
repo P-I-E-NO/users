@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
-#[derive(Serialize, Deserialize, Clone)]
+use utoipa::ToSchema;
+#[derive(Serialize, Deserialize, Clone, ToSchema)]
 pub struct UserClaims {
     pub user_id: String,
     pub name: String,
