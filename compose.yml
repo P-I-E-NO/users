@@ -34,6 +34,7 @@ services:
       - CONN_URI=postgresql://dockerissimo_rust:pass@postgres_db:5432/fantastic_db
       - RUST_LOG=trace
       - JWT_SECRET=Poggaceo
+      - JSON_DOCS_URL=/json-docs
     ports:
       - "3000:3000"
     volumes:

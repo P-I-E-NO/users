@@ -76,7 +76,7 @@ pub async fn build_app() -> Router {
         .with_state(state.clone())
         .route("/", get(routes::main::root::index))
         .merge(SwaggerUi::new("/swagger")
-            .url("/json-docs", ApiDoc::openapi()))
+            .url(env::var("JSON_DOCS_URL").unwrap(), ApiDoc::openapi()))
         .merge(auth_routes(&state));
     app
 }
