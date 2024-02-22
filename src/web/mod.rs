@@ -8,13 +8,16 @@ mod util;
 
 use std::{env, time::Duration};
 
-use axum::{extract::FromRef, routing::{get, post}, Router};
+use axum::{extract::FromRef, http::HeaderMap, response::IntoResponse, routing::{get, post}, Json, Router};
 use log::info;
+use serde_json::{json, Value};
 use sqlx::postgres::{PgPoolOptions, Postgres};
 use utoipa::{openapi::security::{Http, HttpAuthScheme, SecurityScheme}, Modify, OpenApi};
 use utoipa_swagger_ui::SwaggerUi;
 
 use crate::web::{dto::{auth::{logged_user_response::LoggedUserResponse, login_request::{LoginRequest, LoginResponse}, register_request::{RegisterRequest, RegisterResponse}}, user_claims::UserClaims}, routes::auth::auth_routes};
+
+use self::errors::HttpError;
 
 #[derive(Clone, FromRef)]
 pub struct AppState {
@@ -72,11 +75,20 @@ pub async fn build_app() -> Router {
         }
     }
 
+    async fn build_json_schema() -> impl IntoResponse {
+
+        let str_docs = ApiDoc::openapi().to_pretty_json().unwrap();
+        let mut headers = HeaderMap::new();
+        headers.insert("Content-Type", "application/json".parse().unwrap());
+
+        (headers, str_docs)
+    
+    }
+
     let app = Router::new()
         .with_state(state.clone())
         .route("/", get(routes::main::root::index))
-        .merge(SwaggerUi::new("/swagger")
-            .url(env::var("JSON_DOCS_URL").unwrap(), ApiDoc::openapi()))
+        .route("/json-schema", get(build_json_schema))
         .merge(auth_routes(&state));
     app
 }
