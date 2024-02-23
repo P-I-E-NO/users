@@ -40,6 +40,24 @@ impl User {
 
     }
 
+    pub async fn add_fcm_token(
+        &self,
+        e: impl PgExecutor<'_>, 
+        token: &str
+    ) -> Result<(), sqlx_core::Error> {
+        
+        sqlx
+            ::query("
+                insert into fcm_tokens values ($1, $2)
+            ")
+            .bind(&token)
+            .bind(&self.id)
+            .execute(e).await?;
+    
+        Ok(())
+
+    }
+
     pub async fn from_id(
         e: impl PgExecutor<'_>, 
         id: &str

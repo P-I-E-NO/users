@@ -1,6 +1,8 @@
-use axum::{extract::State, http::StatusCode, Json};
+use axum::{debug_handler, extract::State, http::StatusCode, Json};
+use serde_json::{json, Value};
+use sqlx::error::DatabaseError;
 
-use crate::web::{dto::{auth::{logged_user_response::LoggedUserResponse, login_request::{LoginRequest, LoginResponse}, register_request::{RegisterRequest, RegisterResponse}}, user_claims::UserClaims, Claim}, errors::HttpError, extractors::{token::Token, validate_body::ValidatedJson}, models::users::User, util::{hash_password, verify_password}, AppState};
+use crate::web::{dto::{auth::{logged_user_response::LoggedUserResponse, login_request::{LoginRequest, LoginResponse}, put_fcm_token_request::PutFcmTokenRequest, register_request::{RegisterRequest, RegisterResponse}}, user_claims::UserClaims, Claim}, errors::HttpError, extractors::{token::Token, validate_body::ValidatedJson}, models::users::User, util::{hash_password, verify_password}, AppState};
 
 #[utoipa::path(
     get,
@@ -126,4 +128,63 @@ pub async fn register(
         )
     )
     
+}
+
+#[utoipa::path(
+    put,
+    path="/auth/fcm",
+    responses(
+        (status = 200, description = "Token successfully inserted."),
+        (status = 400, description = "The account you made the request with is no longer available")
+    ),
+    params(
+        ("token" = String, Path, description = "The Firebase Cloud Messaging token"),
+    ),
+    security(
+        ("bearerAuth" = [])
+    )
+)]
+#[debug_handler]
+pub async fn add_fcm_token(
+    State(s): State<AppState>,
+    Token(user): Token<Claim<UserClaims>>,
+    ValidatedJson(body): ValidatedJson<PutFcmTokenRequest>,
+) -> Result<Json<Value>, HttpError> {
+    
+    let mut tx = s.pool.begin().await?;
+    if let Some(user) = User::from_id(&mut *tx, &user.data().user_id).await? {
+        let result = user.add_fcm_token(&mut *tx, &body.token).await;
+        tx.commit().await?;
+        
+        if let Err(err) = result {       
+            // if the token is already inside the db we want to return 200 OK anyways      
+            match err {
+                sqlx_core::Error::Database(db_err) => {
+                    if let Some(code) = db_err.code() {
+                        if code == "23505" {
+                            return Ok(
+                                Json(
+                                    json!({"success": true, "message": "fcm already in db"})
+                                )
+                            )
+                        } else {
+                            return Err(HttpError::DbError(sqlx::Error::Database(db_err)))
+                        }
+                    } else {
+                       return Err(HttpError::DbError(sqlx::Error::Database(db_err)))
+                    }
+                }
+                e => return Err(HttpError::DbError(e))
+            }
+        }
+        Ok(
+            Json(
+                json!({"success": true})
+            )
+        )
+    }else{
+        // somebody has forged the token (zamn...)
+        // or maybe somebody is trying to make a request with a token that belongs to a deleted account
+        Err(HttpError::Simple(StatusCode::BAD_REQUEST, "account_unavailable".to_string()))
+    }
 }

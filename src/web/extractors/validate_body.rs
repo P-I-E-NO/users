@@ -4,6 +4,7 @@ use axum::{
     http::{Request, StatusCode},
     Json, body::Body,
 };
+use serde::Serialize;
 use validator::Validate;
 
 use crate::web::errors::HttpError;
@@ -34,7 +35,7 @@ where
                     StatusCode::BAD_REQUEST,
                 )
             })?;
-
+        
         j.validate()?;
 
         Ok(Self(j))

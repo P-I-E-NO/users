@@ -8,16 +8,12 @@ mod util;
 
 use std::{env, time::Duration};
 
-use axum::{extract::FromRef, http::HeaderMap, response::IntoResponse, routing::{get, post}, Json, Router};
+use axum::{extract::FromRef, http::HeaderMap, response::IntoResponse, routing::get, Router};
 use log::info;
-use serde_json::{json, Value};
 use sqlx::postgres::{PgPoolOptions, Postgres};
 use utoipa::{openapi::security::{Http, HttpAuthScheme, SecurityScheme}, Modify, OpenApi};
-use utoipa_swagger_ui::SwaggerUi;
 
 use crate::web::{dto::{auth::{logged_user_response::LoggedUserResponse, login_request::{LoginRequest, LoginResponse}, register_request::{RegisterRequest, RegisterResponse}}, user_claims::UserClaims}, routes::auth::auth_routes};
-
-use self::errors::HttpError;
 
 #[derive(Clone, FromRef)]
 pub struct AppState {
@@ -49,6 +45,7 @@ pub async fn build_app() -> Router {
             routes::auth::root::login,
             routes::auth::root::index,
             routes::auth::root::register,
+            routes::auth::root::add_fcm_token,
         ), 
         modifiers(&SecurityAddon),
         components(

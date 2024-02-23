@@ -24,3 +24,5 @@ argon2 = "0.5.3"
 jsonwebtoken = "9"
 utoipa = "4.2.0"
 utoipa-swagger-ui = { version = "6.0.0", features = ["axum"] }
+reqwest = "0.11.24"
+futures = "0.3.30"

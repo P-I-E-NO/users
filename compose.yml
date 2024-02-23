@@ -21,7 +21,7 @@ services:
     #volumes:
     #  - users_db_data:/var/lib/postgresql/data
     #  - users_pgdata:/var/lib/postgresql/data/pgdata
-  app:
+  app: 
     container_name: dockerissimo-rust
     build:
       context: .
@@ -34,7 +34,7 @@ services:
       - CONN_URI=postgresql://dockerissimo_rust:pass@postgres_db:5432/fantastic_db
       - RUST_LOG=trace
       - JWT_SECRET=Poggaceo
-      - JSON_DOCS_URL=/json-docs
+      - AI_API_URL=https://api.pieno.cloud/predictions-api
     ports:
       - "3000:3000"
     volumes:
