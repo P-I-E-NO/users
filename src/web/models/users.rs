@@ -1,5 +1,7 @@
+use serde::{Deserialize, Serialize};
 use sqlx::{PgExecutor, Row};
 use nanoid::nanoid;
+use utoipa::ToSchema;
 
 pub struct User {
     pub email: String,
@@ -8,6 +10,15 @@ pub struct User {
     pub id: String,
     pub password: String,
     pub propic_url: Option<String>
+}
+
+#[derive(Serialize, Deserialize, ToSchema)]
+pub struct UserModel{
+    pub email: String,
+    pub name: String,
+    pub surname: String,
+    pub id: String,
+    pub propic_url: Option<String> 
 }
 
 impl User {

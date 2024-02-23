@@ -1,29 +1,42 @@
 use axum::{debug_handler, extract::State, http::StatusCode, Json};
 use serde_json::{json, Value};
-use sqlx::error::DatabaseError;
-
-use crate::web::{dto::{auth::{logged_user_response::LoggedUserResponse, login_request::{LoginRequest, LoginResponse}, put_fcm_token_request::PutFcmTokenRequest, register_request::{RegisterRequest, RegisterResponse}}, user_claims::UserClaims, Claim}, errors::HttpError, extractors::{token::Token, validate_body::ValidatedJson}, models::users::User, util::{hash_password, verify_password}, AppState};
+use crate::web::{dto::{auth::{logged_user_response::LoggedUserResponse, login_request::{LoginRequest, LoginResponse}, put_fcm_token_request::PutFcmTokenRequest, register_request::{RegisterRequest, RegisterResponse}}, user_claims::UserClaims, Claim}, errors::HttpError, extractors::{token::Token, validate_body::ValidatedJson}, models::users::{User, UserModel}, util::{hash_password, verify_password}, AppState};
 
 #[utoipa::path(
     get,
     path="/auth/",
     responses(
         (status = 200, description = "Gets logged user", body = LoggedUserResponse),
+        (status = 404, description = "User not found")
     ),
     security(
         ("bearerAuth" = [])
     )
 )]
 pub async fn index(
+    State(s): State<AppState>,
     Token(user): Token<Claim<UserClaims>>
 ) -> Result<Json<LoggedUserResponse>, HttpError> {
 
-    Ok(Json(
-        LoggedUserResponse {
-            success: true,
-            user: user.data().to_owned()
-        }
-    ))
+    let mut conn = s.pool.acquire().await?;
+    if let Some(user) = User::from_id(&mut *conn, &user.data().user_id).await? {
+
+        Ok(Json(
+            LoggedUserResponse {
+                success: true,
+                user: UserModel {
+                    email: user.email,
+                    name: user.name,
+                    surname: user.surname,
+                    id: user.id,
+                    propic_url: user.propic_url,
+                }
+            }
+        ))
+
+    }else{
+        Err(HttpError::Simple(StatusCode::NOT_FOUND, "user_not_found".to_string()))
+    }
 
 }
 
