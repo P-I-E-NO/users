@@ -34,7 +34,6 @@ services:
       - CONN_URI=postgresql://dockerissimo_rust:pass@postgres_db:5432/fantastic_db
       - RUST_LOG=trace
       - JWT_SECRET=Poggaceo
-      - AI_API_URL=https://api.pieno.cloud/predictions-api
     ports:
       - "3000:3000"
     volumes:
@@ -46,10 +45,10 @@ services:
       - users-net
     environment:
       - DB_CONNECTION_STRING=postgresql://dockerissimo_rust:pass@postgres_db:5432/fantastic_db
-      - JWT_SECRET=Poggaceo
+      - JWT_KEY=Poggaceo
       - SERVICE_ACCOUNT_PATH=/code/firebase/pieno-app-firebase-adminsdk-v437b-0e77967c6f.json
     ports:
       - "3004:5050"
     volumes:
-      - /Users/macca/uni/pieno/fcm-messenger/firebase/pieno-app-firebase-adminsdk-v437b-0e77967c6f.json:/code/firebase/pieno-app-firebase-adminsdk-v437b-0e77967c6f.json
+      - /home/macca/stuff/uni/pieno/fcm-messenger/firebase/pieno-app-firebase-adminsdk-v437b-0e77967c6f.json:/code/firebase/pieno-app-firebase-adminsdk-v437b-0e77967c6f.json
 
