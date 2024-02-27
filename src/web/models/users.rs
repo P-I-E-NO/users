@@ -3,6 +3,8 @@ use sqlx::{PgExecutor, Row};
 use nanoid::nanoid;
 use utoipa::ToSchema;
 
+use crate::web::dto::me::notifications::Notification;
+
 pub struct User {
     pub email: String,
     pub name: String,
@@ -48,6 +50,22 @@ impl User {
         }else{
             Ok(None)
         }
+
+    }
+
+    pub async fn get_notifications(
+        &self,
+        e: impl PgExecutor<'_>,
+    ) -> Result<Vec<Notification>, sqlx_core::Error> {
+
+        let results: Vec<Notification> = sqlx::query_as(
+            "select * from notifications where to_user = $1"
+        )
+        .bind(&self.id)
+        .fetch_all(e)
+        .await?;
+    
+        Ok(results)
 
     }
 

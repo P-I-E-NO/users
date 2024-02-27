@@ -1,8 +1,7 @@
 use axum::{routing::{get, post, put}, Router};
-
 use crate::web::AppState;
-
 pub mod root;
+
 pub fn auth_routes(state: &AppState) -> Router {
     Router::new()
         .route("/auth", get(root::index))

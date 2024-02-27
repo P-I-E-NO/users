@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 
 pub mod auth;
 pub mod user_claims;
+pub mod me;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Claim<C> 

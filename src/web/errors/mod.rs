@@ -40,7 +40,10 @@ impl IntoResponse for HttpError {
                             "generic_db_error".to_owned()
                         }
                     }
-                    _ => "internal_server_error".to_owned(),
+                    e => {
+                        dbg!(e);
+                        "internal_server_error".to_owned()
+                    }
                 };
                 (
                     status,

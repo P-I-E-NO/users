@@ -50,5 +50,5 @@ services:
     ports:
       - "3004:5050"
     volumes:
-      - /home/macca/stuff/uni/pieno/fcm-messenger/firebase/pieno-app-firebase-adminsdk-v437b-0e77967c6f.json:/code/firebase/pieno-app-firebase-adminsdk-v437b-0e77967c6f.json
+      - /Users/macca/uni/pieno/fcm-messenger/firebase/pieno-app-firebase-adminsdk-v437b-0e77967c6f.json:/code/firebase/pieno-app-firebase-adminsdk-v437b-0e77967c6f.json
 
