@@ -22,4 +22,5 @@ pub struct NotificationData {
     car_name: String,
     tank_size: String,
     consumption: String,
+    fuel_value: String,
 }

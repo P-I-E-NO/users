@@ -1,6 +1,19 @@
 use axum::{extract::State, http::StatusCode, Json};
 
-use crate::web::{dto::{me::notifications::NotificationResponse, user_claims::UserClaims, Claim}, errors::HttpError, extractors::token::Token, models::users::User, AppState};
+use crate::web::{
+    dto::{
+        me::{
+            notifications::NotificationResponse,
+            update_profile_request::UpdateProfileRequest,
+        },
+        user_claims::UserClaims,
+        Claim,
+    },
+    errors::HttpError,
+    extractors::{token::Token, validate_body::ValidatedJson},
+    models::users::User,
+    AppState,
+};
 
 #[utoipa::path(
     get,
@@ -17,15 +30,14 @@ pub async fn get_me_notifications(
     let mut conn = s.pool.acquire().await?;
     if let Some(user) = User::from_id(&mut *conn, &user.data().user_id).await? {
         let notifications = user.get_notifications(&mut *conn).await?;
-        Ok(
-            Json(NotificationResponse {
-                success: true, 
-                notifications 
-            })
-        )
-    }else{
-        Err(
-            HttpError::Simple(StatusCode::UNAUTHORIZED, "invalid_credentials".to_string())
-        )
+        Ok(Json(NotificationResponse {
+            success: true,
+            notifications,
+        }))
+    } else {
+        Err(HttpError::Simple(
+            StatusCode::UNAUTHORIZED,
+            "invalid_credentials".to_string(),
+        ))
     }
 }

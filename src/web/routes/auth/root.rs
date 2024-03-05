@@ -1,6 +1,22 @@
+use crate::web::{
+    dto::{
+        auth::{
+            logged_user_response::LoggedUserResponse,
+            login_request::{LoginRequest, LoginResponse},
+            put_fcm_token_request::PutFcmTokenRequest,
+            register_request::{RegisterRequest, RegisterResponse},
+        },
+        user_claims::UserClaims,
+        Claim,
+    },
+    errors::HttpError,
+    extractors::{token::Token, validate_body::ValidatedJson},
+    models::users::{User, UserModel},
+    util::{hash_password, verify_password},
+    AppState,
+};
 use axum::{debug_handler, extract::State, http::StatusCode, Json};
 use serde_json::{json, Value};
-use crate::web::{dto::{auth::{logged_user_response::LoggedUserResponse, login_request::{LoginRequest, LoginResponse}, put_fcm_token_request::PutFcmTokenRequest, register_request::{RegisterRequest, RegisterResponse}}, user_claims::UserClaims, Claim}, errors::HttpError, extractors::{token::Token, validate_body::ValidatedJson}, models::users::{User, UserModel}, util::{hash_password, verify_password}, AppState};
 
 #[utoipa::path(
     get,
@@ -15,29 +31,26 @@ use crate::web::{dto::{auth::{logged_user_response::LoggedUserResponse, login_re
 )]
 pub async fn index(
     State(s): State<AppState>,
-    Token(user): Token<Claim<UserClaims>>
+    Token(user): Token<Claim<UserClaims>>,
 ) -> Result<Json<LoggedUserResponse>, HttpError> {
-
     let mut conn = s.pool.acquire().await?;
     if let Some(user) = User::from_id(&mut *conn, &user.data().user_id).await? {
-
-        Ok(Json(
-            LoggedUserResponse {
-                success: true,
-                user: UserModel {
-                    email: user.email,
-                    name: user.name,
-                    surname: user.surname,
-                    id: user.id,
-                    propic_url: user.propic_url,
-                }
-            }
+        Ok(Json(LoggedUserResponse {
+            success: true,
+            user: UserModel {
+                email: user.email,
+                name: user.name,
+                surname: user.surname,
+                id: user.id,
+                propic_url: user.propic_url,
+            },
+        }))
+    } else {
+        Err(HttpError::Simple(
+            StatusCode::NOT_FOUND,
+            "user_not_found".to_string(),
         ))
-
-    }else{
-        Err(HttpError::Simple(StatusCode::NOT_FOUND, "user_not_found".to_string()))
     }
-
 }
 
 #[utoipa::path(
@@ -54,42 +67,38 @@ pub async fn index(
 )]
 pub async fn login(
     State(s): State<AppState>,
-    ValidatedJson(body): ValidatedJson<LoginRequest>
+    ValidatedJson(body): ValidatedJson<LoginRequest>,
 ) -> Result<Json<LoginResponse>, HttpError> {
-
     let mut conn = s.pool.acquire().await?;
 
     if let Some(user) = User::from_email(&mut *conn, &body.email).await? {
-
         let verify = verify_password(&body.password, &user.password).await?;
-        if !verify{
-            return Err(
-                HttpError::Simple(StatusCode::UNAUTHORIZED, "invalid_credentials".to_string())
-            )
+        if !verify {
+            return Err(HttpError::Simple(
+                StatusCode::UNAUTHORIZED,
+                "invalid_credentials".to_string(),
+            ));
         }
 
-        let token = Token::<Claim<UserClaims>>::generate(
-            Claim::from(UserClaims {
+        let token =
+            Token::<Claim<UserClaims>>::generate(Claim::from(UserClaims {
                 user_id: user.id,
                 name: user.name,
                 surname: user.surname,
-                propic_url: user.propic_url
-            })
-        ).await?;
+                propic_url: user.propic_url,
+            }))
+            .await?;
 
-        Ok(
-            Json(
-                LoginResponse {
-                    success: true,
-                    token: token
-                } 
-            )
-        )
-    }else{
-        Err(HttpError::Simple(StatusCode::UNAUTHORIZED, "invalid_credentials".to_string()))
+        Ok(Json(LoginResponse {
+            success: true,
+            token: token,
+        }))
+    } else {
+        Err(HttpError::Simple(
+            StatusCode::UNAUTHORIZED,
+            "invalid_credentials".to_string(),
+        ))
     }
-    
-
 }
 
 #[utoipa::path(
@@ -108,39 +117,34 @@ pub async fn login(
 )]
 pub async fn register(
     State(s): State<AppState>,
-    ValidatedJson(body): ValidatedJson<RegisterRequest>
+    ValidatedJson(body): ValidatedJson<RegisterRequest>,
 ) -> Result<Json<RegisterResponse>, HttpError> {
-
-    let mut tx = s.pool.begin().await?;  
+    let mut tx = s.pool.begin().await?;
 
     let hashed_password = hash_password(&body.password).await?;
     let user_id = User::register(
-        &mut *tx, 
-        &body.email, 
-        &body.name, 
+        &mut *tx,
+        &body.email,
+        &body.name,
         &body.surname,
-        &hashed_password
-    ).await?;
+        &hashed_password,
+    )
+    .await?;
 
-    let token = Token::<Claim<UserClaims>>::generate(
-        Claim::from(UserClaims { 
-            user_id: user_id,
-            name: body.name,
-            surname: body.surname,
-            propic_url: None
-        })
-    ).await?;
+    let token = Token::<Claim<UserClaims>>::generate(Claim::from(UserClaims {
+        user_id: user_id,
+        name: body.name,
+        surname: body.surname,
+        propic_url: None,
+    }))
+    .await?;
 
     tx.commit().await?;
 
-    Ok(Json(
-            RegisterResponse{
-                success: true,
-                token: token
-            }
-        )
-    )
-    
+    Ok(Json(RegisterResponse {
+        success: true,
+        token: token,
+    }))
 }
 
 #[utoipa::path(
@@ -163,41 +167,41 @@ pub async fn add_fcm_token(
     Token(user): Token<Claim<UserClaims>>,
     ValidatedJson(body): ValidatedJson<PutFcmTokenRequest>,
 ) -> Result<Json<Value>, HttpError> {
-    
     let mut tx = s.pool.begin().await?;
     if let Some(user) = User::from_id(&mut *tx, &user.data().user_id).await? {
         let result = user.add_fcm_token(&mut *tx, &body.token).await;
         tx.commit().await?;
-        
-        if let Err(err) = result {       
-            // if the token is already inside the db we want to return 200 OK anyways      
+
+        if let Err(err) = result {
+            // if the token is already inside the db we want to return 200 OK anyways
             match err {
                 sqlx_core::Error::Database(db_err) => {
                     if let Some(code) = db_err.code() {
                         if code == "23505" {
-                            return Ok(
-                                Json(
-                                    json!({"success": true, "message": "fcm already in db"})
-                                )
-                            )
+                            return Ok(Json(
+                                json!({"success": true, "message": "fcm already in db"}),
+                            ));
                         } else {
-                            return Err(HttpError::DbError(sqlx::Error::Database(db_err)))
+                            return Err(HttpError::DbError(
+                                sqlx::Error::Database(db_err),
+                            ));
                         }
                     } else {
-                       return Err(HttpError::DbError(sqlx::Error::Database(db_err)))
+                        return Err(HttpError::DbError(sqlx::Error::Database(
+                            db_err,
+                        )));
                     }
                 }
-                e => return Err(HttpError::DbError(e))
+                e => return Err(HttpError::DbError(e)),
             }
         }
-        Ok(
-            Json(
-                json!({"success": true})
-            )
-        )
-    }else{
+        Ok(Json(json!({"success": true})))
+    } else {
         // somebody has forged the token (zamn...)
         // or maybe somebody is trying to make a request with a token that belongs to a deleted account
-        Err(HttpError::Simple(StatusCode::BAD_REQUEST, "account_unavailable".to_string()))
+        Err(HttpError::Simple(
+            StatusCode::BAD_REQUEST,
+            "account_unavailable".to_string(),
+        ))
     }
 }
